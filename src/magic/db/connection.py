@@ -18,11 +18,14 @@ def connect(db_path: Path) -> sqlite3.Connection:
 
 
 def init_schema(conn: sqlite3.Connection) -> None:
+    from .migrate import pre_schema_migrations, apply_migrations
+    # Destructive migrations (drop/recreate) run before schema.sql, which is
+    # idempotent via CREATE IF NOT EXISTS.
+    pre_schema_migrations(conn)
     sql = SCHEMA_PATH.read_text(encoding="utf-8")
     conn.executescript(sql)
     conn.commit()
-    # Bring pre-existing DBs created under an earlier schema up to date.
-    from .migrate import apply_migrations
+    # Additive migrations (ALTER ADD COLUMN) run after schema.sql.
     apply_migrations(conn)
 
 

@@ -128,20 +128,24 @@ CREATE TABLE IF NOT EXISTS commanders (
     last_refreshed  TEXT
 );
 
--- Per-commander card inclusion rates (edhrec).
+-- Per-commander card inclusion rates (edhrec). One row per (commander, card,
+-- category) so a single card can appear in multiple edhrec cardlists
+-- (e.g. "topcards" AND "ramp") without collision.
 CREATE TABLE IF NOT EXISTS commander_card_stats (
     commander_oracle_id TEXT NOT NULL REFERENCES commanders(oracle_id) ON DELETE CASCADE,
     card_oracle_id  TEXT NOT NULL,
-    inclusion_count INTEGER NOT NULL,
-    inclusion_pct   REAL NOT NULL,             -- 0.0 - 1.0
-    category        TEXT,                      -- edhrec category: Ramp, Draw, Removal, etc.
+    category        TEXT NOT NULL DEFAULT '',  -- edhrec tag: topcards, highsynergycards, ramp, carddraw, removal, ...
+    inclusion_count INTEGER NOT NULL,          -- num_decks
+    potential_decks INTEGER,                   -- sample size
+    inclusion_pct   REAL NOT NULL,             -- num_decks / potential_decks (0.0 - 1.0)
     synergy_score   REAL,
     last_refreshed  TEXT NOT NULL,
-    PRIMARY KEY (commander_oracle_id, card_oracle_id)
+    PRIMARY KEY (commander_oracle_id, card_oracle_id, category)
 );
 
 CREATE INDEX IF NOT EXISTS idx_ccs_card ON commander_card_stats(card_oracle_id);
 CREATE INDEX IF NOT EXISTS idx_ccs_inclusion ON commander_card_stats(commander_oracle_id, inclusion_pct);
+CREATE INDEX IF NOT EXISTS idx_ccs_category ON commander_card_stats(commander_oracle_id, category);
 
 -- ============================================================================
 -- Tournament meta (from edhtop16)

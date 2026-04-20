@@ -15,7 +15,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from magic.config import load_config  # noqa: E402
 from magic.db.connection import connect, init_schema  # noqa: E402
-from magic.ingest import scryfall, topdeck  # noqa: E402
+from magic.ingest import scryfall, topdeck, edhrec  # noqa: E402
 
 
 def main() -> int:
@@ -23,8 +23,8 @@ def main() -> int:
     parser.add_argument(
         "--sources",
         nargs="+",
-        default=["scryfall", "topdeck"],
-        choices=["scryfall", "topdeck"],
+        default=["scryfall", "topdeck", "edhrec"],
+        choices=["scryfall", "topdeck", "edhrec"],
         help="Which data sources to refresh.",
     )
     parser.add_argument(
@@ -52,6 +52,10 @@ def main() -> int:
         if "topdeck" in args.sources:
             print("=== topdeck.gg ===")
             topdeck.ingest(conn, config, last_days=args.topdeck_last_days)
+
+        if "edhrec" in args.sources:
+            print("=== edhrec ===")
+            edhrec.ingest(conn, config)
 
     finally:
         conn.close()

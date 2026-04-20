@@ -33,6 +33,28 @@ def _add_columns(conn: sqlite3.Connection, table: str, specs: Iterable[tuple[str
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {spec}")
 
 
+def _primary_key_cols(conn: sqlite3.Connection, table: str) -> list[str]:
+    rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
+    return [r[1] for r in rows if r[5]]  # pk column is index 5
+
+
+def pre_schema_migrations(conn: sqlite3.Connection) -> None:
+    """Run BEFORE schema.sql — handles destructive changes like PK restructuring.
+
+    Safe because these changes only fire when the table has an out-of-date shape.
+    For commander_card_stats specifically, this runs only if the old
+    (commander, card) PK is still in place; after that, schema.sql recreates it
+    with the new shape.
+    """
+    if _table_exists(conn, "commander_card_stats"):
+        pk = set(_primary_key_cols(conn, "commander_card_stats"))
+        if pk and "category" not in pk:
+            # Old schema — drop so schema.sql recreates with new PK.
+            # Safe: edhrec ingestion hadn't landed yet, so nothing of value lives here.
+            conn.execute("DROP TABLE commander_card_stats")
+            conn.commit()
+
+
 def apply_migrations(conn: sqlite3.Connection) -> None:
     """Apply all outstanding column additions. Safe to run repeatedly."""
     _add_columns(conn, "decks", [
