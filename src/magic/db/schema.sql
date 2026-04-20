@@ -80,8 +80,8 @@ END;
 
 CREATE TABLE IF NOT EXISTS decks (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    source          TEXT NOT NULL,             -- 'moxfield', 'archidekt', 'manual', 'edhtop16'
-    external_id     TEXT,                      -- e.g. Moxfield public ID
+    source          TEXT NOT NULL,             -- 'moxfield', 'archidekt', 'topdeck', 'manual'
+    external_id     TEXT,                      -- e.g. Moxfield public ID or topdeck player ID
     name            TEXT NOT NULL,
     commander_oracle_id TEXT,                  -- primary commander
     partner_oracle_id TEXT,                    -- optional partner/background
@@ -89,6 +89,10 @@ CREATE TABLE IF NOT EXISTS decks (
     owner           TEXT,                      -- username on the source platform
     url             TEXT,
     description     TEXT,
+    view_count      INTEGER,                   -- popularity (moxfield public browse)
+    bracket         INTEGER,                   -- moxfield bracket 1-5 (casual power level)
+    source_updated_at TEXT,                    -- when the deck was last updated on the source platform
+    topdeck_deck_id TEXT,                      -- topdeck.gg player/deck identifier
     imported_at     TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
     raw_json        TEXT,
@@ -161,11 +165,43 @@ CREATE TABLE IF NOT EXISTS tournament_entries (
     commander_oracle_id TEXT,
     partner_oracle_id TEXT,
     deck_id         INTEGER REFERENCES decks(id),
+    wins            INTEGER,
+    losses          INTEGER,
+    draws           INTEGER,
+    win_rate        REAL,                      -- wins / (wins + losses + draws)
+    decklist_url    TEXT,                      -- raw decklist reference from topdeck (URL or identifier)
     raw_json        TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_tourn_entries_commander ON tournament_entries(commander_oracle_id);
 CREATE INDEX IF NOT EXISTS idx_tourn_entries_tourn ON tournament_entries(tournament_id);
+-- idx_tourn_entries_win_rate is created in migrate.py so it works for DBs
+-- created before the win_rate column existed.
+
+-- ============================================================================
+-- Commander watchlist (which commanders to ingest tournament/meta data for)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS commander_watchlist (
+    oracle_id       TEXT PRIMARY KEY,          -- FK-ish to cards.oracle_id
+    name            TEXT NOT NULL,
+    notes           TEXT,
+    active          INTEGER NOT NULL DEFAULT 1,
+    added_at        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ============================================================================
+-- Sync checkpoints (per-source watermarks for delta ingestion)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS sync_checkpoints (
+    source          TEXT NOT NULL,             -- 'topdeck', 'moxfield_public', 'edhrec'
+    key             TEXT NOT NULL DEFAULT '',  -- optional sub-key (e.g. commander name)
+    last_synced_at  TEXT NOT NULL,
+    watermark       TEXT,                      -- highest-seen timestamp or cursor; source-specific
+    row_count       INTEGER,
+    PRIMARY KEY (source, key)
+);
 
 -- ============================================================================
 -- Ingestion bookkeeping

@@ -25,6 +25,11 @@ class Config:
     moxfield_username: str
     edhrec_request_delay: float
     edhtop16_endpoint: str
+    topdeck_api_key: str
+    topdeck_lookback_months: int
+    topdeck_min_event_size: int
+    topdeck_max_standing: int
+    topdeck_request_delay: float
 
 
 def load_config() -> Config:
@@ -47,4 +52,9 @@ def load_config() -> Config:
         edhtop16_endpoint=raw.get("edhtop16", {}).get(
             "endpoint", "https://edhtop16.com/api/graphql"
         ),
+        topdeck_api_key=raw.get("topdeck", {}).get("api_key", ""),
+        topdeck_lookback_months=int(raw.get("topdeck", {}).get("lookback_months", 3)),
+        topdeck_min_event_size=int(raw.get("topdeck", {}).get("min_event_size", 30)),
+        topdeck_max_standing=int(raw.get("topdeck", {}).get("max_standing", 16)),
+        topdeck_request_delay=float(raw.get("topdeck", {}).get("request_delay", 0.7)),
     )

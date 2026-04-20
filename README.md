@@ -6,9 +6,11 @@ can reason over your card pool, decklists, and the current tournament meta.
 
 ## Status
 
-**Phase 1: foundation + Scryfall ingestion.** Card database works end-to-end.
-Moxfield import, edhrec/edhtop16 ingestion, and the MCP server arrive in
-later phases.
+**Phase 1 (done): foundation + Scryfall card DB.**
+**Phase 2 (done): topdeck.gg cEDH tournament ingestion + commander watchlist.**
+
+Moxfield import (public + private), edhrec ingestion, and the MCP server
+arrive in later phases.
 
 ## Setup
 
@@ -36,8 +38,17 @@ python scripts/init_db.py
 # Pull latest Scryfall bulk data (~500MB download, cached under data/cache/)
 python scripts/refresh.py --sources scryfall
 
-# Force a fresh download even if cache is current
-python scripts/refresh.py --sources scryfall --force-download
+# Manage cEDH commander watchlist
+python scripts/watchlist.py add "Kinnan, Bonder Prodigy"
+python scripts/watchlist.py list
+python scripts/watchlist.py remove "Kinnan, Bonder Prodigy"
+
+# Pull tournaments from topdeck.gg (requires api_key in config/config.toml)
+python scripts/refresh.py --sources topdeck
+python scripts/refresh.py --sources topdeck --topdeck-last-days 14  # shorter window
+
+# Refresh everything
+python scripts/refresh.py
 ```
 
 The SQLite database lives at `data/magic.db` by default. It is gitignored.
@@ -61,8 +72,9 @@ Magic/
 ## Roadmap
 
 - **Phase 1** (done): Scryfall card DB
-- **Phase 2**: Moxfield deck import (your existing decklists)
-- **Phase 3**: edhrec + edhtop16 ingestion (commander stats, tournament meta)
-- **Phase 4**: MCP server exposing search, stats, and deck tools to Claude Desktop
-- **Phase 5**: Upgrade suggestion engine (deck vs. meta scoring)
-- **Phase 6** (optional): Local web UI for browsing
+- **Phase 2** (done): topdeck.gg cEDH tournament ingestion + commander watchlist
+- **Phase 3**: Moxfield ingestion — public browse (casual, by bracket/views) + private decks (yours)
+- **Phase 4**: edhrec commander page ingestion (card pool + inclusion rates for casual)
+- **Phase 5**: MCP server exposing search, stats, and deck tools to Claude Desktop
+- **Phase 6**: Upgrade suggestion engine (deck vs. meta scoring)
+- **Phase 7** (optional): Local web UI for browsing

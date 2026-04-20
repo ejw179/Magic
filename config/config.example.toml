@@ -21,5 +21,17 @@ username = ""
 request_delay = 0.5
 
 [edhtop16]
-# GraphQL endpoint. No auth required.
+# GraphQL endpoint. No auth required. (Not used in Phase 2; kept for later
+# if we want edhtop16 aggregates as an enrichment source.)
 endpoint = "https://edhtop16.com/api/graphql"
+
+[topdeck]
+# API key from https://topdeck.gg account settings. Bearer token, sent in
+# the Authorization header. Free, 100 req/min.
+api_key = ""
+# Default filter window for cEDH tournament ingestion.
+lookback_months = 3
+min_event_size = 30
+max_standing = 16
+# Pause between requests to stay under 100 req/min.
+request_delay = 0.7

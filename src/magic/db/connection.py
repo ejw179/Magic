@@ -21,6 +21,9 @@ def init_schema(conn: sqlite3.Connection) -> None:
     sql = SCHEMA_PATH.read_text(encoding="utf-8")
     conn.executescript(sql)
     conn.commit()
+    # Bring pre-existing DBs created under an earlier schema up to date.
+    from .migrate import apply_migrations
+    apply_migrations(conn)
 
 
 @contextmanager

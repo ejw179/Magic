@@ -15,7 +15,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from magic.config import load_config  # noqa: E402
 from magic.db.connection import connect, init_schema  # noqa: E402
-from magic.ingest import scryfall  # noqa: E402
+from magic.ingest import scryfall, topdeck  # noqa: E402
 
 
 def main() -> int:
@@ -23,14 +23,20 @@ def main() -> int:
     parser.add_argument(
         "--sources",
         nargs="+",
-        default=["scryfall"],
-        choices=["scryfall"],  # grow this as phases land
+        default=["scryfall", "topdeck"],
+        choices=["scryfall", "topdeck"],
         help="Which data sources to refresh.",
     )
     parser.add_argument(
         "--force-download",
         action="store_true",
         help="Ignore cached bulk file and re-download.",
+    )
+    parser.add_argument(
+        "--topdeck-last-days",
+        type=int,
+        default=None,
+        help="Override lookback window (days) for topdeck. Default: config.lookback_months * 30.",
     )
     args = parser.parse_args()
 
@@ -42,6 +48,10 @@ def main() -> int:
         if "scryfall" in args.sources:
             print("=== Scryfall ===")
             scryfall.ingest(conn, config, force_download=args.force_download)
+
+        if "topdeck" in args.sources:
+            print("=== topdeck.gg ===")
+            topdeck.ingest(conn, config, last_days=args.topdeck_last_days)
 
     finally:
         conn.close()
