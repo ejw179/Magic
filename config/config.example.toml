@@ -1,0 +1,25 @@
+# Copy this file to config.toml and fill in values.
+# config.toml is gitignored.
+
+[paths]
+# Relative to repo root. Override if you want the DB stored elsewhere.
+db = "data/magic.db"
+cache_dir = "data/cache"
+
+[scryfall]
+# Which bulk dataset to pull. Options: default_cards, oracle_cards, unique_artwork, all_cards
+bulk_type = "default_cards"
+
+[moxfield]
+# Paste your Moxfield session token here (from browser devtools, cookie "_moxfield_auth_token").
+# Leave blank until you're ready to import decks in phase 2.
+auth_token = ""
+username = ""
+
+[edhrec]
+# No auth required. Rate-limit delay between requests (seconds).
+request_delay = 0.5
+
+[edhtop16]
+# GraphQL endpoint. No auth required.
+endpoint = "https://edhtop16.com/api/graphql"
